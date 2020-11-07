@@ -99,11 +99,11 @@ module.exports = { initialarray: [
     [ 4, 0, 0, 0 ]
   ]
 ], 
-highlightedcell : null,
+highlightedcell : [], 
 inputnum : {inputnum: null, inputterid : null},
 correctcount : 0,
 requiredcorrect : 81-43,
 issolved : 0
-
+//there is no prop 'clientid' . 
 }
 
