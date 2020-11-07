@@ -1,5 +1,5 @@
 const app = require("express")();
-const server = require("http").createServer(app);
+const server = require("https").createServer(app);
 const io = require("socket.io")(server);
 const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require("constants");
 const object = require("./initialarray");
