@@ -1,18 +1,31 @@
 const app = require("express")();
-const server = require("https").createServer(app);
+const server = require("http").createServer(app);
 const io = require("socket.io")(server);
 const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require("constants");
 const object = require("./initialarray");
+const children = require("child_process")
 
-console.log(object.initialarray[1][1][2])
+var allchild = [];
+for(var i=0;i<2;i++){
+    allchild.push(children.fork("./child.js"));
+    allchild[i].send({type : "initiate", data: object});
+} //spawn three child processes when the server starts
 
-
+var i=0
 io.on("connect", (socket) =>{
     console.log("socket id" + socket.id);
     socket.on("inputnum", inputnum => {
-        const issuccess = dotask(inputnum, socket.id);
-        if(issuccess)
+        const cellid = findcellid(socket.id);
+        if(cellid){
+            object.initialarray[cellid.i][cellid.j][2] = inputnum;
             io.emit("inputnumchanged", object)
+        }
+    })
+    socket.on("check", inputnum => {
+        const cellid = findcellid(socket.id)
+        if(cellid){
+            dochecking(inputnum, cellid)
+        }
     })
     socket.on("highlightchange", cellid => {
         console.log(cellid);
@@ -44,8 +57,7 @@ io.on("connect", (socket) =>{
         console.log("a client disconnected id" + socket.id);
     })
         
-        
-
+    
 });
 
 
@@ -54,9 +66,8 @@ const PORT = process.env.PORT || 3001
 server.listen(PORT, () => console.log("listening on port 3001"));
 
 
-var flag = 0;
 
-function dotask(inputnum, socketid){
+function findcellid(socketid){
     var cellid = null;
     object.highlightedcell.forEach(e => {
         if(e.clientid == socketid)  
@@ -64,22 +75,21 @@ function dotask(inputnum, socketid){
     })
     if(!cellid)
         return null; //no cell was selected
-    console.log(cellid);
     const i= Math.floor(cellid/10) -1 , j= cellid%10 -1;
-    object.initialarray[i][j][2] = inputnum;
-    const correctvalue = object.initialarray[i][j][0];
-
-    
-    if(inputnum == correctvalue && flag == 0){
-        object.correctcount++
-        flag = 1;
-    }
-    else if(flag && inputnum != correctvalue){
-        object.correctcount--
-        flag = 0
-    }
-    if(object.correctcount == object.requiredcorrect)
-        object.issolved = 1;
+    return {i:i, j:j}
         
-    return 1;
+}
+
+function dochecking(inputnum, cellid){
+    for(var k=0;k<2;k++){
+        allchild[i].send({
+            type : "newnum",
+            data : {
+                inputnum : inputnum,
+                i: cellid.i, 
+                j :cellid.j,
+                pid : k
+            }
+        })
+    }
 }
