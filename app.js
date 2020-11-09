@@ -5,6 +5,8 @@ const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require("constants");
 const object = require("./initialarray");
 const children = require("child_process")
 
+
+
 var mistakes = [], count = 0;
 
 var allchild = [];
@@ -111,3 +113,23 @@ function takecare(){
     mistakes = []
     count = 0;
 }
+
+app.get("/", (req,res) => {
+    res.send("Server working")
+})
+
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+
+ // Add this
+ if (req.method === 'OPTIONS') {
+
+      res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, OPTIONS');
+      res.header('Access-Control-Max-Age', 120);
+      return res.status(200).json({});
+  }
+
+  next();
+
+});
