@@ -5,11 +5,23 @@ const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require("constants");
 const object = require("./initialarray");
 const children = require("child_process")
 
+var mistakes = [], count = 0;
+
 var allchild = [];
-for(var i=0;i<2;i++){
+for(var i=0;i<3;i++){
     allchild.push(children.fork("./child.js"));
     allchild[i].send({type : "initiate", data: object});
+    allchild[i].on("message", data => {
+        if(data.type === "result"){
+            mistakes = mistakes.concat(data.result.mistakes)
+            count++
+            if(count > 2)
+               takecare();
+        }
+    })
 } //spawn three child processes when the server starts
+
+
 
 var i=0
 io.on("connect", (socket) =>{
@@ -81,7 +93,7 @@ function findcellid(socketid){
 }
 
 function dochecking(inputnum, cellid){
-    for(var k=0;k<2;k++){
+    for(var k=0;k<3;k++){
         allchild[i].send({
             type : "newnum",
             data : {
@@ -92,4 +104,10 @@ function dochecking(inputnum, cellid){
             }
         })
     }
+}
+
+function takecare(){
+    io.emit("mistakes", mistakes);
+    mistakes = []
+    count = 0;
 }
