@@ -133,3 +133,39 @@ app.use(function(req, res, next) {
   next();
 
 });
+
+const online = io.of("/online");
+const single = io.of("/single")
+const dual = io.of("/dual")
+
+var onlineusers = {}
+
+online.on("connection", socket => {
+    console.log("Some user is online")
+    socket.emit("onlineusers", onlineusers)
+    socket.on("message" , name => {
+        socket.send(`Your name is ${name}`)
+    })
+
+    socket.on("entername", name => {
+        onlineusers = {...onlineusers, [socket.id] : name}
+        online.emit("onlineusers", onlineusers)
+    })
+
+    socket.on("disconnect", () => {
+        onlineusers = {...onlineusers, [socket.id] : null }
+        online.emit("onlineusers", onlineusers)
+    })
+
+})
+
+
+
+
+single.on("connection", socket => {
+    socket.send("this is single player mode");
+} )
+
+dual.on("connection", socket => {
+    socket.send("this is dual player mode");
+})

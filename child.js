@@ -14,8 +14,7 @@ process.on("message", e => {
         const {i,j,inputnum, pid} = e.data;
         object.initialarray[i][j][2] = inputnum;
         var result = check(i,j,pid);
-        console.log("\n")
-        console.log(result.mistakes);
+        // console.log(`result from process ${pid} - ${result.mistakes}`)
         process.send({type : "result", result : result})
     }
 })
@@ -37,6 +36,7 @@ function check(i,j,pid){
         for(var k=0;k<9;k++)
             if(object.initialarray[i][k][2] == 0)
                 isfull = 0;
+        console.log(`mistakes from ${pid} ingroup ${i} are ${mistakes}`)
         mistakes = storemistakes(i, mistakes)
         if(mistakes.length == 0 && isfull)
             isclear = 1;
@@ -44,7 +44,7 @@ function check(i,j,pid){
     }
 
     if(pid == 1){ //check the corresponding column 
-        var mistakes = []
+         var mistakes = []
         for(var k=0;k<9;k++){
             const ref = object.initialarray[k][j][2];
             var count = 0;
@@ -53,16 +53,17 @@ function check(i,j,pid){
                     count++;
             }
             if(count > 1)
-                mistakes.push((k+1)*10 + j+1)
+                mistakes.push((k+1)*10 + (j+1))
         }
         var isfull = 1, isclear = 0;
         for(var k=0;k<9;k++)
             if(object.initialarray[k][j][2] == 0)
                 isfull = 0;
-        mistakes = storemistakes(j,mistakes)
+        console.log(`mistakes from ${pid} ingroup ${j} are ${mistakes}`)
+        mistakes = storemistakes(j, mistakes)
         if(mistakes.length == 0 && isfull)
             isclear = 1;
-        return {mistakes : mistakes, isclear : isclear} 
+        return {mistakes : mistakes, isclear : isclear}
     }
     if(pid == 2){
         var mistakes = []
@@ -83,7 +84,8 @@ function check(i,j,pid){
                 if(count > 1)
                     mistakes.push((k+1)*10 + l+1)
            }
-        mistakes = storemistakes(findsquare(k,l), mistakes)
+        console.log(`mistakes from ${pid} ingroup ${findsquare(k,l)} are ${mistakes}`)
+        mistakes = storemistakes(findsquare(k,l), mistakes, pid)
         if(mistakes.length == 0 && isfull)
             isclear = 1;
         
@@ -93,18 +95,22 @@ function check(i,j,pid){
     }
 }
 
-function storemistakes(i, onecollection){
+function storemistakes(i, onecollection, pid){
     allmistakes[i] = onecollection;
+    // if(pid ==1)
+    //     console.log(`i value ${i} allmistakes ${allmistakes}`)
     var newarray = []
     for(var k=0;k<9;k++){
         newarray = newarray.concat(allmistakes[k])
     }
-    console.log(newarray)
+    // if(pid ==1)
+    //     console.log(`i value ${i} allmistakes ${newarray}`)
     return newarray
 
 }
 
 function findsquare(k,l){
+    k--; l--;
     var index;
     if(k==l){
         if(k==2)
