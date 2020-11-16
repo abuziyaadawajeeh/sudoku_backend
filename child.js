@@ -1,9 +1,6 @@
 
 var object;
-var allmistakes = [0,0,0,0,0,0,0,0,0]
-allmistakes = allmistakes.map(e => {
-    return []
-})
+var allmistakes = []
 
 process.on("message", e => {
     if(e.type === "initiate"){
@@ -13,9 +10,9 @@ process.on("message", e => {
     if(e.type === "newnum"){
         const {i,j,inputnum, pid} = e.data;
         object.initialarray[i][j][2] = inputnum;
-        var result = check(i,j,pid);
+        check(i,j,pid);
         // console.log(`result from process ${pid} - ${result.mistakes}`)
-        process.send({type : "result", result : result})
+        process.send({type : "result", result : {isclear : null, mistakes : allmistakes}})
     }
 })
 
@@ -37,10 +34,9 @@ function check(i,j,pid){
             if(object.initialarray[i][k][2] == 0)
                 isfull = 0;
         console.log(`mistakes from ${pid} ingroup ${i} are ${mistakes}`)
-        mistakes = storemistakes(i, mistakes)
-        if(mistakes.length == 0 && isfull)
-            isclear = 1;
-        return {mistakes : mistakes, isclear : isclear}
+        review(i, mistakes, pid)
+        
+        return 
     }
 
     if(pid == 1){ //check the corresponding column 
@@ -60,10 +56,9 @@ function check(i,j,pid){
             if(object.initialarray[k][j][2] == 0)
                 isfull = 0;
         console.log(`mistakes from ${pid} ingroup ${j} are ${mistakes}`)
-        mistakes = storemistakes(j, mistakes)
-        if(mistakes.length == 0 && isfull)
-            isclear = 1;
-        return {mistakes : mistakes, isclear : isclear}
+        review(j, mistakes,pid)
+        
+        return 
     }
     if(pid == 2){
         var mistakes = []
@@ -85,27 +80,40 @@ function check(i,j,pid){
                     mistakes.push((k+1)*10 + l+1)
            }
         console.log(`mistakes from ${pid} ingroup ${findsquare(k,l)} are ${mistakes}`)
-        mistakes = storemistakes(findsquare(k,l), mistakes, pid)
-        if(mistakes.length == 0 && isfull)
-            isclear = 1;
-        
-        return {mistakes : mistakes, isclear : isclear} 
+        specialreview(k,l, mistakes)
+    
+        return
         
 
     }
 }
 
-function storemistakes(i, onecollection, pid){
-    allmistakes[i] = onecollection;
-    // if(pid ==1)
-    //     console.log(`i value ${i} allmistakes ${allmistakes}`)
-    var newarray = []
-    for(var k=0;k<9;k++){
-        newarray = newarray.concat(allmistakes[k])
+function review(i, onecollection, pid){
+    if(pid == 0){
+        allmistakes = allmistakes.filter(e=>{
+            return Math.floor(e/10) != i+1
+        })
     }
-    // if(pid ==1)
-    //     console.log(`i value ${i} allmistakes ${newarray}`)
-    return newarray
+    if(pid == 1){
+        allmistakes = allmistakes.filter(e=>{
+            return e%10 != i+1
+        })
+    }
+    allmistakes = allmistakes.concat(onecollection)
+    console.log(`all mistakes from ${pid}  are ${allmistakes}`)
+
+
+
+}
+
+function specialreview(k,l,onecollection){
+    k++;l++;
+    allmistakes = allmistakes.filter(e => {
+        var quo = Math.floor(e/10), mod = e%10
+        return (quo > k-3 && quo < k+1) && (mod > l-3 && mod <l+1)
+    })
+    allmistakes = allmistakes.concat(onecollection)
+    console.log(`mistakes from 2 are ${allmistakes}`)
 
 }
 

@@ -26,13 +26,15 @@ for(var i=0;i<3;i++){
 
 
 var i=0
-io.on("connect", (socket) =>{
-    console.log("socket id" + socket.id);
+const gameplay = io.of("/gameplay")
+gameplay.on("connect", (socket) =>{
+    console.log("normal connection id" + socket.id);
     socket.on("inputnum", inputnum => {
+        console.log("input num event");
         const cellid = findcellid(socket.id);
         if(cellid){
             object.initialarray[cellid.i][cellid.j][2] = inputnum;
-            io.emit("inputnumchanged", object)
+            gameplay.emit("inputnumchanged", object)
         }
     })
     socket.on("check", inputnum => {
@@ -41,33 +43,30 @@ io.on("connect", (socket) =>{
             dochecking(inputnum, cellid)
         }
     })
-    socket.on("highlightchange", cellid => {
-        console.log(cellid);
-        io.emit("highlightchanged", cellid)
-    })
 
     socket.on("initiateme", () => {
         var initialobj = {  ...object , clientid : socket.id}
+        console.log("emitting get initiated")
         socket.emit("getinitiated", initialobj); 
     })
     socket.on("givenumbers", () => {
         socket.emit("havenumbers", object)
     })
 
-    socket.on("highlightcell", (cellid) => {
+    socket.on("cellhighlight", (cellid) => {
         object.highlightedcell = object.highlightedcell.filter(e => {
             return e.clientid != socket.id
         }) //remove previous highlighted cell of that client
         object.highlightedcell.push({cellid: cellid, clientid: socket.id}); //add new highlighted cell
         console.log("emitting havenumbers")
-        io.emit("havenumbers", object);
+        gameplay.emit("havenumbers", object);
 
     })
     socket.on("disconnect" , () => {
          object.highlightedcell = object.highlightedcell.filter(e => {
             return e.clientid != socket.id
         })
-        io.emit("havenumbers", object);
+        gameplay.emit("havenumbers", object);
         console.log("a client disconnected id" + socket.id);
     })
         
@@ -109,7 +108,7 @@ function dochecking(inputnum, cellid){
 }
 
 function takecare(){
-    io.emit("mistakes", mistakes);
+    gameplay.emit("mistakes", mistakes);
     mistakes = []
     count = 0;
 }
