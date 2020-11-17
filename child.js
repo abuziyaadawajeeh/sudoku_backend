@@ -33,7 +33,7 @@ function check(i,j,pid){
         for(var k=0;k<9;k++)
             if(object.initialarray[i][k][2] == 0)
                 isfull = 0;
-        console.log(`mistakes from ${pid} ingroup ${i} are ${mistakes}`)
+        // console.log(`mistakes from ${pid} ingroup ${i} are ${mistakes}`)
         review(i, mistakes, pid)
         
         return 
@@ -55,7 +55,7 @@ function check(i,j,pid){
         for(var k=0;k<9;k++)
             if(object.initialarray[k][j][2] == 0)
                 isfull = 0;
-        console.log(`mistakes from ${pid} ingroup ${j} are ${mistakes}`)
+        // console.log(`mistakes from ${pid} ingroup ${j} are ${mistakes}`)
         review(j, mistakes,pid)
         
         return 
@@ -79,7 +79,7 @@ function check(i,j,pid){
                 if(count > 1)
                     mistakes.push((k+1)*10 + l+1)
            }
-        console.log(`mistakes from ${pid} ingroup ${findsquare(k,l)} are ${mistakes}`)
+        // console.log(`mistakes from ${pid} ingroup ${findsquare(k,l)} are ${mistakes}`)
         specialreview(k,l, mistakes)
     
         return
@@ -99,21 +99,23 @@ function review(i, onecollection, pid){
             return e%10 != i+1
         })
     }
+    // console.log(allmistakes, pid)
+    console.log(onecollection, pid)
     allmistakes = allmistakes.concat(onecollection)
-    console.log(`all mistakes from ${pid}  are ${allmistakes}`)
+    // console.log(`all mistakes from ${pid}  are ${allmistakes}`)
 
 
 
 }
 
 function specialreview(k,l,onecollection){
-    k++;l++;
     allmistakes = allmistakes.filter(e => {
         var quo = Math.floor(e/10), mod = e%10
-        return (quo > k-3 && quo < k+1) && (mod > l-3 && mod <l+1)
+        return (quo < k-3 && quo > k+1) && (mod < l-3 && mod > l+1)
     })
+    console.log(onecollection,2)
     allmistakes = allmistakes.concat(onecollection)
-    console.log(`mistakes from 2 are ${allmistakes}`)
+    // console.log(`mistakes from 2 are ${allmistakes}`)
 
 }
 
