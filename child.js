@@ -1,3 +1,4 @@
+const masterobject = require("./masterobject")
 
 var object;
 var allmistakes = []
@@ -7,23 +8,46 @@ process.on("message", e => {
         console.log(`Child process with id ${process.pid} created`);
         object = e.data;
     }
-    if(e.type === "newnum"){
-        const {i,j,inputnum, pid} = e.data;
-        object.initialarray[i][j][2] = inputnum;
-        check(i,j,pid);
-        // console.log(`result from process ${pid} - ${result.mistakes}`)
-        process.send({type : "result", result : {isclear : null, mistakes : allmistakes}})
+    if(e.type === "addplayer"){
+        masterobject.addplayer = {socketid : e.socketid} 
     }
+    if(e.type === "removeplayer"){
+        masterobject.removeplayer = e.socketid
+    }
+
+    if(e.type === "highlightcell"){
+        masterobject.allarrays[e.socketid].highlightedcell = [e.cellid]
+    }
+    if(e.type === "inputnum"){
+        var ref = masterobject.allarrays[e.socketid]
+        var hcellid = ref.highlightedcell
+        if( hcellid.length != 0){
+            var i = Math.floor(hcellid[0] /10) - 1 , j = hcellid[0]%10 - 1
+            ref.initialarray[i][j][2] = parseInt(e.inputnum)
+            var oneset = check(e.socketid, i,j, e.pid)
+            process.send({type : "oneset", socketid : e.socketid, oneset : oneset, i : i, j : j, pid : e.pid})
+        }
+    }
+
+
+    // if(e.type === "newnum"){
+    //     const {i,j,inputnum, pid} = e.data;
+    //     reference[i][j][2] = inputnum;
+    //     check(e.socketid, i,j,pid);
+    //     // console.log(`result from process ${pid} - ${result.mistakes}`)
+    //     process.send({type : "result", result : {isclear : null, mistakes : allmistakes}})
+    // }
 })
 
-function check(i,j,pid){
+function check(socketid, i,j,pid){
+    var reference = masterobject.allarrays[socketid].initialarray
     if(pid == 0){ //check the corresponding row 
         var mistakes = []
         for(var k=0;k<9;k++){
-            const ref = object.initialarray[i][k][2];
+            const ref = reference[i][k][2];
             var count = 0;
             for(var l=0;l<9;l++){
-                if(object.initialarray[i][l][2] == ref && ref != 0)
+                if(reference[i][l][2] == ref && ref != 0)
                     count++;
             }
             if(count > 1)
@@ -31,21 +55,19 @@ function check(i,j,pid){
         }
         var isfull = 1, isclear = 0;
         for(var k=0;k<9;k++)
-            if(object.initialarray[i][k][2] == 0)
+            if(reference[i][k][2] == 0)
                 isfull = 0;
-        // console.log(`mistakes from ${pid} ingroup ${i} are ${mistakes}`)
-        review(i, mistakes, pid)
-        
-        return 
+        console.log(`mistakes from ${pid} ingroup ${i} are ${mistakes}`)
+        return mistakes
     }
 
     if(pid == 1){ //check the corresponding column 
          var mistakes = []
         for(var k=0;k<9;k++){
-            const ref = object.initialarray[k][j][2];
+            const ref = reference[k][j][2];
             var count = 0;
             for(var l=0;l<9;l++){
-                if(object.initialarray[l][j][2] == ref && ref != 0)
+                if(reference[l][j][2] == ref && ref != 0)
                     count++;
             }
             if(count > 1)
@@ -53,12 +75,11 @@ function check(i,j,pid){
         }
         var isfull = 1, isclear = 0;
         for(var k=0;k<9;k++)
-            if(object.initialarray[k][j][2] == 0)
+            if(reference[k][j][2] == 0)
                 isfull = 0;
-        // console.log(`mistakes from ${pid} ingroup ${j} are ${mistakes}`)
-        review(j, mistakes,pid)
-        
-        return 
+        console.log(`mistakes from ${pid} ingroup ${j} are ${mistakes}`)
+        return mistakes
+
     }
     if(pid == 2){
         var mistakes = []
@@ -66,23 +87,21 @@ function check(i,j,pid){
         var isfull = 1;
         for(var k=r;k<r+3;k++)
            for(var l=c;l<c+3;l++){
-               const ref = object.initialarray[k][l][2];
+               const ref = reference[k][l][2];
                if(ref == 0)
                   isfull = 0;
                var count = 0
                for(var m=r;m<r+3;m++)
                    for(var n=c;n<c+3;n++){
-                       if(object.initialarray[m][n][2] == ref && ref != 0)
+                       if(reference[m][n][2] == ref && ref != 0)
                           count++;
                    }
 
                 if(count > 1)
                     mistakes.push((k+1)*10 + l+1)
            }
-        // console.log(`mistakes from ${pid} ingroup ${findsquare(k,l)} are ${mistakes}`)
-        specialreview(k,l, mistakes)
-    
-        return
+        console.log(`mistakes from ${pid} ingroup ${findsquare(k,l)} are ${mistakes}`)
+        return mistakes
         
 
     }

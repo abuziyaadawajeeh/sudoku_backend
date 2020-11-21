@@ -46,6 +46,10 @@ for(var i=0;i<3;i++){
             if(count > 2)
                takecare();
         }
+
+        if(data.type === "oneset"){
+            gameplay.to(data.socketid).emit("oneset", {i : data.i , j : data.j , pid : data.pid, oneset : data.oneset})
+        }
     })
 } //spawn three child processes when the server starts
 
@@ -61,28 +65,25 @@ gameplay.on("connect", (socket) =>{
             return
         }
         if(!masterobject.timeron){
-            setTimeout(startgame, 15000);
+            setTimeout(startgame, 10000);
             masterobject.starttimer = 1
         }
-        masterobject.addplayer = {socketid : socket.id, name: name}
+        var socketid = socket.id
+        masterobject.addplayer = {socketid : socketid, name: name}
+        for(var i=0;i<3;i++)
+            allchild[i].send({type : "addplayer", socketid : socketid }); //tell child processes to create their own copies
+
         // socket.emit("getinitiated", initialobj); 
     })
 
     socket.on("cellhighlight", (cellid) => {
-        object.highlightedcell = object.highlightedcell.filter(e => {
-            return e.clientid != socket.id
-        }) //remove previous highlighted cell of that client
-        object.highlightedcell.push({cellid: cellid, clientid: socket.id}); //add new highlighted cell
-        gameplay.emit("havenumbers", object);
-
+        for(var i=0;i<3;i++)
+            allchild[i].send({type : "highlightcell", socketid : socket.id , cellid : cellid }); 
     })
 
-    socket.on("inputnum", inputnum => { //event to just update about the input num
-        const cellid = findcellid(socket.id);
-        if(cellid){
-            object.initialarray[cellid.i][cellid.j][2] = inputnum;
-            gameplay.emit("inputnumchanged", object)
-        }
+    socket.on("inputnum", inputnum => {
+        for(var i=0;i<3;i++)
+            allchild[i].send({type : "inputnum", socketid : socket.id, inputnum : inputnum, pid : i }); 
     })
 
     socket.on("check", inputnum => { //separate event to do the check if the input num is correct
@@ -98,7 +99,10 @@ gameplay.on("connect", (socket) =>{
 
     
     socket.on("disconnect" , () => {
-        masterobject.removeplayer = socket.id
+        var socketid = socket.id
+        masterobject.removeplayer = socketid
+        for(var i=0;i<3;i++)
+            allchild[i].send({type : "removeplayer", socketid }); //tell child processes to remove their own copies
         // gameplay.emit("havenumbers", object);
     })
         
@@ -143,7 +147,7 @@ dual.on("connection", socket => {
 
 function findcellid(socketid){
     var cellid = null;
-    object.highlightedcell.forEach(e => {
+    masterobject.allarrays[socketid].highlightedcell.forEach(e => {
         if(e.clientid == socketid)  
             cellid = e.cellid;
     })
@@ -185,6 +189,17 @@ function startgame(){
     })
 }
 
+
+function nullify(cellid, socketid){
+    var all = Object.keys(masterobject.allplayers)
+    all = all.filter((e) => {
+        return e != socketid
+    })
+
+    all.forEach(one => {
+        masterobject.allarrays[one].initialarray[cellid.i][cellid.j][2] = 0
+    })
+}
 
 
 
