@@ -65,7 +65,7 @@ gameplay.on("connect", (socket) =>{
             return
         }
         if(!masterobject.timeron){
-            setTimeout(startgame, 10000);
+            setTimeout(startgame, 20000);
             masterobject.starttimer = 1
         }
         var socketid = socket.id
@@ -92,6 +92,13 @@ gameplay.on("connect", (socket) =>{
             dochecking(inputnum, cellid)
         }
     })
+
+    socket.on("correctcount", count => {
+        masterobject.allplayers[socket.id].correctcount = count
+        gameplay.emit("changedcount", masterobject.allplayers)
+    }
+
+    )
 
     socket.on("givenumbers", () => {
         socket.emit("havenumbers", object)
