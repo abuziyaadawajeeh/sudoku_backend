@@ -65,11 +65,12 @@ gameplay.on("connect", (socket) =>{
             return
         }
         if(!masterobject.timeron){
-            setTimeout(startgame, 20000);
+            setTimeout(startgame, 25000);
             masterobject.starttimer = 1
         }
         var socketid = socket.id
         masterobject.addplayer = {socketid : socketid, name: name}
+        socket.join("gameroom")
         for(var i=0;i<3;i++)
             allchild[i].send({type : "addplayer", socketid : socketid }); //tell child processes to create their own copies
 
@@ -95,10 +96,14 @@ gameplay.on("connect", (socket) =>{
 
     socket.on("correctcount", count => {
         masterobject.allplayers[socket.id].correctcount = count
-        gameplay.emit("changedcount", masterobject.allplayers)
-    }
+        gameplay.to("gameroom").emit("changedcount", masterobject.allplayers)
+    })
 
-    )
+    socket.on("gamesolved", () => {
+        masterobject.setfinishdetails = socket.id
+        gameplay.to("gameroom").emit("changedcount", masterobject.allplayers)
+        gameplay.to("gameroom").emit("finishedplayers", masterobject.finishedplayers)
+    })
 
     socket.on("givenumbers", () => {
         socket.emit("havenumbers", object)
@@ -186,7 +191,7 @@ function takecare(){
 }
 
 function startgame(){
-    masterobject.gameon = 1
+    masterobject.startgame = 1
     const allplayers = Object.keys(masterobject.allarrays)
     allplayers.forEach(oneplayer => {
         var oneboard = masterobject.allarrays[oneplayer]
