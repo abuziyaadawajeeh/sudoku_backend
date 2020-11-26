@@ -57,7 +57,6 @@ function check(socketid, i,j,pid){
         for(var k=0;k<9;k++)
             if(reference[i][k][2] == 0)
                 isfull = 0;
-        console.log(`mistakes from ${pid} ingroup ${i} are ${mistakes}`)
         return mistakes
     }
 
@@ -77,7 +76,6 @@ function check(socketid, i,j,pid){
         for(var k=0;k<9;k++)
             if(reference[k][j][2] == 0)
                 isfull = 0;
-        console.log(`mistakes from ${pid} ingroup ${j} are ${mistakes}`)
         return mistakes
 
     }
@@ -100,7 +98,6 @@ function check(socketid, i,j,pid){
                 if(count > 1)
                     mistakes.push((k+1)*10 + l+1)
            }
-        console.log(`mistakes from ${pid} ingroup ${findsquare(k,l)} are ${mistakes}`)
         return mistakes
         
 
@@ -118,12 +115,7 @@ function review(i, onecollection, pid){
             return e%10 != i+1
         })
     }
-    // console.log(allmistakes, pid)
-    console.log(onecollection, pid)
     allmistakes = allmistakes.concat(onecollection)
-    // console.log(`all mistakes from ${pid}  are ${allmistakes}`)
-
-
 
 }
 
@@ -134,7 +126,6 @@ function specialreview(k,l,onecollection){
     })
     console.log(onecollection,2)
     allmistakes = allmistakes.concat(onecollection)
-    // console.log(`mistakes from 2 are ${allmistakes}`)
 
 }
 

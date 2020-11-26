@@ -1,26 +1,8 @@
-const oneobject = require("./initialarray.js");
+const object = require("./generator.js");
 
-var fakefinish = {
-    "fake1" : {
-        name : "fake1",
-        timetaken : 50
-    },
-    "fake2" : {
-        name : "fake2",
-        timetaken : 40
-    },
-    "fake3" : {
-        name : "fake3",
-        timetaken : 45
-    },
-    "fake4" : {
-        name : "fake4",
-        timetaken : 37
-    },
-    "fake5" : {
-        name : "fake5",
-        timetaken : 63
-    },
+var newobj
+function generatenew(){
+    newobj = new object
 }
 
 
@@ -40,10 +22,10 @@ module.exports = {
 
     },
     set addplayer(details) {
-        this.allarrays[details.socketid] = oneobject
+        this.allarrays[details.socketid] = newobj
         this.allplayers[details.socketid] = {
             name : details.name,
-            correctcount : 0,
+            filledcount : 0,    
             color : this.colors[this.i++],
         }
     },
@@ -58,10 +40,12 @@ module.exports = {
             this.timestarted = null
             this.i = 0
             this.finishedplayers = {}
+            // notify.notifywaiters()
         }
     },
     set starttimer(dummy){
         this.timeron = 1
+        generatenew()
     },
     set startgame(dummy){
         this.gameon = 1
@@ -76,3 +60,4 @@ module.exports = {
         delete this.allplayers[socketid] 
     }
 }
+

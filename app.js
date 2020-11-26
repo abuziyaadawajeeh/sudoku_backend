@@ -7,6 +7,9 @@ const children = require("child_process")
 const masterobject = require("./masterobject.js");
 const { allarrays } = require("./masterobject.js");
 
+const timetostart = 10000
+var timerinterval
+
 const PORT = process.env.PORT || 3001
 server.listen(PORT, () => console.log("listening on port 3001"));
 
@@ -29,8 +32,6 @@ app.use(function(req, res, next) {
   next();
 
 });
-
-
 
 
 var mistakes = [], count = 0;
@@ -62,30 +63,32 @@ gameplay.on("connect", (socket) =>{
     socket.on("roomentered", (name) => {
         if(masterobject.gameon){
             socket.emit("wait");
+            socket.join("waiters")
             return
         }
         if(!masterobject.timeron){
-            setTimeout(startgame, 25000);
             masterobject.starttimer = 1
+            timerinterval = setInterval(timerfunc, 1000)
+            setTimeout(startgame, timetostart);
         }
         var socketid = socket.id
         masterobject.addplayer = {socketid : socketid, name: name}
         socket.join("gameroom")
+        socket.emit("accepted")
         for(var i=0;i<3;i++)
             allchild[i].send({type : "addplayer", socketid : socketid }); //tell child processes to create their own copies
 
-        // socket.emit("getinitiated", initialobj); 
     })
 
-    socket.on("cellhighlight", (cellid) => {
-        for(var i=0;i<3;i++)
-            allchild[i].send({type : "highlightcell", socketid : socket.id , cellid : cellid }); 
-    })
+    // socket.on("cellhighlight", (cellid) => {
+    //     for(var i=0;i<3;i++)
+    //         allchild[i].send({type : "highlightcell", socketid : socket.id , cellid : cellid }); 
+    // })
 
-    socket.on("inputnum", inputnum => {
-        for(var i=0;i<3;i++)
-            allchild[i].send({type : "inputnum", socketid : socket.id, inputnum : inputnum, pid : i }); 
-    })
+    // socket.on("inputnum", inputnum => {
+    //     for(var i=0;i<3;i++)
+    //         allchild[i].send({type : "inputnum", socketid : socket.id, inputnum : inputnum, pid : i }); 
+    // })
 
     socket.on("check", inputnum => { //separate event to do the check if the input num is correct
         const cellid = findcellid(socket.id)
@@ -94,8 +97,8 @@ gameplay.on("connect", (socket) =>{
         }
     })
 
-    socket.on("correctcount", count => {
-        masterobject.allplayers[socket.id].correctcount = count
+    socket.on("filledcount", count => {
+        masterobject.allplayers[socket.id].filledcount = count
         gameplay.to("gameroom").emit("changedcount", masterobject.allplayers)
     })
 
@@ -112,9 +115,13 @@ gameplay.on("connect", (socket) =>{
     
     socket.on("disconnect" , () => {
         var socketid = socket.id
+        var playersonline = Object.keys(masterobject.allplayers)
+        if(playersonline.length == 1)
+            gameplay.to("waiters").emit("refreshpage")
         masterobject.removeplayer = socketid
         for(var i=0;i<3;i++)
-            allchild[i].send({type : "removeplayer", socketid }); //tell child processes to remove their own copies
+            allchild[i].send({type : "removeplayer", socketid }); //tell child processes to remove 
+            // their own copies
         // gameplay.emit("havenumbers", object);
     })
         
@@ -192,6 +199,8 @@ function takecare(){
 
 function startgame(){
     masterobject.startgame = 1
+    clearInterval(timerinterval)
+    timerem = timetostart/1000
     const allplayers = Object.keys(masterobject.allarrays)
     allplayers.forEach(oneplayer => {
         var oneboard = masterobject.allarrays[oneplayer]
@@ -200,6 +209,17 @@ function startgame(){
         gameplay.to(oneplayer).emit("gamestarted", oneboard, otherplayers)
     })
 }
+
+var timerem = timetostart/1000
+function timerfunc(){
+    timerem--
+    gameplay.to("gameroom").emit("timerem", timerem)
+    if(timerem == 1)
+        setTimeout( () => {
+            gameplay.to("gameroom").emit("timerem", 0)
+        } , 1000)
+}
+
 
 
 function nullify(cellid, socketid){
