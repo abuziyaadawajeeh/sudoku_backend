@@ -7,7 +7,7 @@ const children = require("child_process")
 const masterobject = require("./masterobject.js");
 const { allarrays } = require("./masterobject.js");
 
-const timetostart = 10000
+const timetostart = 30000
 var timerinterval
 
 const PORT = process.env.PORT || 3001
@@ -66,6 +66,11 @@ gameplay.on("connect", (socket) =>{
             socket.join("waiters")
             return
         }
+        if(Object.keys(masterobject.allplayers).length == 10){
+            socket.emit("wait");
+            socket.join("waiters")
+            return
+        }
         if(!masterobject.timeron){
             masterobject.starttimer = 1
             timerinterval = setInterval(timerfunc, 1000)
@@ -106,23 +111,24 @@ gameplay.on("connect", (socket) =>{
         masterobject.setfinishdetails = socket.id
         gameplay.to("gameroom").emit("changedcount", masterobject.allplayers)
         gameplay.to("gameroom").emit("finishedplayers", masterobject.finishedplayers)
+        var playersstillplaying = Object.keys(masterobject.allplayers)    
+      if(playersstillplaying.length == 0){
+            gameplay.to("waiters").emit("refreshpage")
+            gameplay.disconnect()
+        }    //notify waiting users if all prev players has finished/left the game
     })
 
-    socket.on("givenumbers", () => {
-        socket.emit("havenumbers", object)
-    })
 
-    
     socket.on("disconnect" , () => {
         var socketid = socket.id
-        var playersonline = Object.keys(masterobject.allplayers)
-        if(playersonline.length == 1)
-            gameplay.to("waiters").emit("refreshpage")
         masterobject.removeplayer = socketid
         for(var i=0;i<3;i++)
             allchild[i].send({type : "removeplayer", socketid }); //tell child processes to remove 
             // their own copies
-        // gameplay.emit("havenumbers", object);
+        var playersstillplaying = Object.keys(masterobject.allplayers)    
+        if(playersstillplaying.length == 0){
+            gameplay.to("waiters").emit("refreshpage")
+        }    //notify waiting users if all prev players has finished/left the game
     })
         
     

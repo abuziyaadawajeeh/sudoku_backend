@@ -7,7 +7,7 @@ function generatenew(){
 
 
 module.exports = {
-    colors : ["red", "green", "blue", "yellow", "orange", "pink"],
+    colors : ["red", "green", "blue", "yellow", "orange", "pink", "brown", "grey", "white","black"],
     i : 0,
     gameon : 0,
     timeron : 0,
@@ -34,13 +34,11 @@ module.exports = {
         delete this.allplayers[socketid]
         this.i--
         const keys = Object.keys(this.allarrays)
-        if(keys.length == 0){ //reset those two flags if the last player went offline
+        if(keys.length == 0){ //reset values if last player went offline
             this.timeron = 0
             this.gameon = 0
             this.timestarted = null
-            this.i = 0
-            this.finishedplayers = {}
-            // notify.notifywaiters()
+            this.i = 0          
         }
     },
     set starttimer(dummy){
@@ -48,6 +46,7 @@ module.exports = {
         generatenew()
     },
     set startgame(dummy){
+        this.finishedplayers = {} //remove results of previous game before new game starts
         this.gameon = 1
         this.timestarted = Date.now()
     },
@@ -58,6 +57,13 @@ module.exports = {
             timetaken : timetaken
         }
         delete this.allplayers[socketid] 
+        const keys = Object.keys(this.allarrays)
+        if(keys.length == 0){ //reset values if the last player finishes game
+            this.timeron = 0
+            this.gameon = 0
+            this.timestarted = null
+            this.i = 0
+        }
     }
 }
 
