@@ -7,11 +7,17 @@ const children = require("child_process")
 const masterobject = require("./masterobject.js");
 const { allarrays } = require("./masterobject.js");
 
-const timetostart = 30000
-var timerinterval
+
 
 const PORT = process.env.PORT || 3001
 server.listen(PORT, () => console.log("listening on port 3001"));
+
+var timetostart
+var timerinterval
+if(PORT == 3001){
+    timetostart = 5000
+}else
+    timetostart = 30000
 
 app.get("/", (req,res) => {
     res.send("Server working")
@@ -81,19 +87,19 @@ gameplay.on("connect", (socket) =>{
         socket.join("gameroom")
         socket.emit("accepted")
         for(var i=0;i<3;i++)
-            allchild[i].send({type : "addplayer", socketid : socketid }); //tell child processes to create their own copies
+            allchild[i].send({type : "addplayer", socketid : socketid , obj : masterobject.allarrays[socketid]}); //tell child processes to create their own copies
 
     })
 
-    // socket.on("cellhighlight", (cellid) => {
-    //     for(var i=0;i<3;i++)
-    //         allchild[i].send({type : "highlightcell", socketid : socket.id , cellid : cellid }); 
-    // })
+    socket.on("cellhighlight", (cellid) => {
+        for(var i=0;i<3;i++)
+            allchild[i].send({type : "highlightcell", socketid : socket.id , cellid : cellid }); 
+    })
 
-    // socket.on("inputnum", inputnum => {
-    //     for(var i=0;i<3;i++)
-    //         allchild[i].send({type : "inputnum", socketid : socket.id, inputnum : inputnum, pid : i }); 
-    // })
+    socket.on("inputnum", inputnum => {
+        for(var i=0;i<3;i++)
+            allchild[i].send({type : "inputnum", socketid : socket.id, inputnum : inputnum, pid : i }); 
+    })
 
     socket.on("check", inputnum => { //separate event to do the check if the input num is correct
         const cellid = findcellid(socket.id)

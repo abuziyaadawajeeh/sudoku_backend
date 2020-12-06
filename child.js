@@ -8,10 +8,10 @@ process.on("message", e => {
         console.log(`Child process with id ${process.pid} created`);
         object = e.data;
     }
-    if(e.type === "addplayer"){
-        masterobject.addplayer = {socketid : e.socketid} 
+    if(e.type === "adplayer"){
+        masterobject.allarrays[e.socketid] = e.obj
     }
-    if(e.type === "removeplayer"){
+    if(e.type === "removplayer"){
         masterobject.removeplayer = e.socketid
     }
 
@@ -23,20 +23,12 @@ process.on("message", e => {
         var hcellid = ref.highlightedcell
         if( hcellid.length != 0){
             var i = Math.floor(hcellid[0] /10) - 1 , j = hcellid[0]%10 - 1
-            ref.initialarray[i][j][2] = parseInt(e.inputnum)
+            ref.initialarray[i][j][2] = e.inputnum
             var oneset = check(e.socketid, i,j, e.pid)
             process.send({type : "oneset", socketid : e.socketid, oneset : oneset, i : i, j : j, pid : e.pid})
         }
     }
 
-
-    // if(e.type === "newnum"){
-    //     const {i,j,inputnum, pid} = e.data;
-    //     reference[i][j][2] = inputnum;
-    //     check(e.socketid, i,j,pid);
-    //     // console.log(`result from process ${pid} - ${result.mistakes}`)
-    //     process.send({type : "result", result : {isclear : null, mistakes : allmistakes}})
-    // }
 })
 
 function check(socketid, i,j,pid){
